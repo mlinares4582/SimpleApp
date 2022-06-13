@@ -7,7 +7,7 @@ import * as path from 'path';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
 import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { CorsHttpMethod, HttpApi } from '@aws-cdk/aws-apigatewayv2-alpha';
-import { LambdaIntegration } from 'aws-cdk-lib/aws-apigateway';
+// import { LambdaIntegration } from 'aws-cdk-lib/aws-apigateway';
 
 
 
