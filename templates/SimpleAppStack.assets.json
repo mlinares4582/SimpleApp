@@ -1,0 +1,19 @@
+{
+  "version": "20.0.0",
+  "files": {
+    "fcc1e99325cc20a3365689a055c0a6d8560b631d5a6355e463da6eceba312988": {
+      "source": {
+        "path": "SimpleAppStack.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "current_account-current_region": {
+          "bucketName": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}",
+          "objectKey": "fcc1e99325cc20a3365689a055c0a6d8560b631d5a6355e463da6eceba312988.json",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-file-publishing-role-${AWS::AccountId}-${AWS::Region}"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}
