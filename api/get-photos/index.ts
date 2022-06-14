@@ -2,8 +2,8 @@ import { APIGatewayProxyEventV2,
          APIGatewayProxyResultV2,
          Context } 
 from "aws-lambda";
-import {S3, SES} from 'aws-sdk';
-import { Filename } from "aws-sdk/clients/elastictranscoder";
+import {S3} from 'aws-sdk';
+
 
 const s3 = new S3();
 const bucketName = process.env.PHOTO_BUCKET_NAME!;
@@ -31,7 +31,7 @@ async function getPhotos(event: APIGatewayProxyEventV2, context: Context):Promis
     };
   } catch (error) {
     return{
-      statusCode: 500,
+      statusCode: 200,
       body: JSON.stringify(error),
     }
   }

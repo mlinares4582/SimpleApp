@@ -1,14 +1,12 @@
 import { CfnOutput, Stack, StackProps } from 'aws-cdk-lib';
 import { Bucket, BucketEncryption } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
-import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
-import { HttpMethod, Runtime } from 'aws-cdk-lib/aws-lambda';
 import * as path from 'path';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
 import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
-import { CorsHttpMethod, HttpApi } from '@aws-cdk/aws-apigatewayv2-alpha';
-// import { LambdaIntegration } from 'aws-cdk-lib/aws-apigateway';
-
+import { CorsHttpMethod, HttpApi,HttpMethod } from '@aws-cdk/aws-apigatewayv2-alpha';
+import { LambdaIntegration, LambdaRestApi } from 'aws-cdk-lib/aws-apigateway';
+import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 
 
 
@@ -29,7 +27,6 @@ export class SimpleAppStack extends Stack {
     });
 
     const getPhotos = new NodejsFunction(this, 'MySimpleAppLambda', {
-      runtime: Runtime.NODEJS_12_X,
       entry: path.join(__dirname,'..','api', 'get-photos', 'index.ts'),
       handler: 'getPhotos',
       environment: {
@@ -49,23 +46,25 @@ export class SimpleAppStack extends Stack {
     getPhotos.addToRolePolicy(bucketContainerPermissions);
     getPhotos.addToRolePolicy(bucketPermissions);
 
-    const httpApi = new HttpApi(this, 'MySimpleAppHttpApi', {
-      corsPreflight: {
-        allowOrigins: ['*'],
-        allowMethods:[CorsHttpMethod.GET],
-      },
-      apiName:'photo-api',
-      createDefaultStage: true
+
+    const apigw = new LambdaRestApi(this, 'simpleAppApi', {
+      restApiName: 'Simple App Api ',
+      handler: getPhotos,
+      proxy: false
     });
 
-    // const lambdaIntegration = new LambdaIntegration({
-    //   handler: getPhotos
-    // });
+    const photoApi = apigw.root.addResource('getAllPhotos');
+      photoApi.addMethod('GET');
+
+    
 
     new CfnOutput(this, 'MySimpleAppBucketNameExport', {
       value: bucket.bucketName,
       exportName:'MySimpleAppBucketName',
     });
+
+
+
 
   }
 }
