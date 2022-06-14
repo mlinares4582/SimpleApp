@@ -7,6 +7,7 @@ import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
 // import { CorsHttpMethod, HttpApi,HttpMethod } from '@aws-cdk/aws-apigatewayv2-alpha';
 import { LambdaIntegration, LambdaRestApi } from 'aws-cdk-lib/aws-apigateway';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
+import { CloudFrontWebDistribution } from 'aws-cdk-lib/aws-cloudfront'; 
 
 
 
@@ -25,6 +26,30 @@ export class SimpleAppStack extends Stack {
       ],
       destinationBucket: bucket,
     });
+
+    // New bucket for the React App
+    const websiteBucket = new Bucket(this, 'MySimpleAppWebsiteBucket',{
+      // tell what index document we are going to use when people reach the url.
+      websiteIndexDocument: 'index.html',
+      publicReadAccess: true,
+    })
+
+    new BucketDeployment(this,'MySimpleWebsiteDeploy',{
+      sources: [Source.asset(path.join(__dirname, '..','frontend','build'))],
+      destinationBucket: websiteBucket
+    })
+
+    const cloudFront = new CloudFrontWebDistribution(this, 'MySimpleAppDistribution', {
+      originConfigs: [{
+        s3OriginSource: {
+          s3BucketSource: websiteBucket,
+        },
+        behaviors:[{isDefaultBehavior: true}]
+      
+      
+      }],
+    })
+
 
     const getPhotos = new NodejsFunction(this, 'MySimpleAppLambda', {
       entry: path.join(__dirname,'..','api', 'get-photos', 'index.ts'),
@@ -63,8 +88,18 @@ export class SimpleAppStack extends Stack {
       exportName:'MySimpleAppBucketName',
     });
 
+    new CfnOutput(this,'MySimpleAppWebsiteBucketNameExport',{
+      value: websiteBucket.bucketName,
+      exportName: 'MySimpleAppWebsiteBucketName',
+    });
 
+    new CfnOutput(this,'MySimpleAppWebsiteUrl',{
+      value: cloudFront.distributionDomainName,
+      exportName: 'MySimpleAppUrl',
+
+    });
 
 
   }
 }
+
