@@ -4,7 +4,7 @@ import { Construct } from 'constructs';
 import * as path from 'path';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
 import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
-import { CorsHttpMethod, HttpApi,HttpMethod } from '@aws-cdk/aws-apigatewayv2-alpha';
+// import { CorsHttpMethod, HttpApi,HttpMethod } from '@aws-cdk/aws-apigatewayv2-alpha';
 import { LambdaIntegration, LambdaRestApi } from 'aws-cdk-lib/aws-apigateway';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 
