@@ -75,7 +75,21 @@ export class SimpleAppStack extends Stack {
     const apigw = new LambdaRestApi(this, 'simpleAppApi', {
       restApiName: 'Simple App Api ',
       handler: getPhotos,
-      proxy: false
+      proxy: false,
+      
+
+        defaultCorsPreflightOptions: {
+          allowHeaders: [
+            'Content-Type',
+            'X-Amz-Date',
+            'Authorization',
+            'X-Api-Key',
+          ],
+        allowMethods: ['OPTIONS', 'GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+        allowCredentials: true,
+        allowOrigins: ['*'],
+    
+      },
     });
 
     const photoApi = apigw.root.addResource('getAllPhotos');
