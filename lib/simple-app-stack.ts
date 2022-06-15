@@ -9,15 +9,17 @@ import { LambdaIntegration, LambdaRestApi } from 'aws-cdk-lib/aws-apigateway';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { CloudFrontWebDistribution } from 'aws-cdk-lib/aws-cloudfront'; 
 
-
+interface SimpleAppStackProps extends StackProps {
+  envName: string;
+}
 
 export class SimpleAppStack extends Stack {
-  constructor(scope: Construct, id: string, props?: StackProps) {
+  constructor(scope: Construct, id: string, props?: SimpleAppStackProps) {
     super(scope, id, props);
 
     // The code that defines your stack goes here
     const bucket = new Bucket(this, 'MySimpleAppBucket', {
-    encryption: BucketEncryption.S3_MANAGED,
+    encryption: props?.envName === 'prod' ?BucketEncryption.S3_MANAGED : BucketEncryption.UNENCRYPTED,
     });
 
     new BucketDeployment(this,'MySimpleAppPhotos', {
@@ -102,17 +104,17 @@ export class SimpleAppStack extends Stack {
 
     new CfnOutput(this, 'MySimpleAppBucketNameExport', {
       value: bucket.bucketName,
-      exportName:'MySimpleAppBucketName',
+      exportName: `MySimpleAppBucketName${props?.envName}`,
     });
 
     new CfnOutput(this,'MySimpleAppWebsiteBucketNameExport',{
       value: websiteBucket.bucketName,
-      exportName: 'MySimpleAppWebsiteBucketName',
+      exportName: `MySimpleAppWebsiteBucketName${props?.envName}`,
     });
 
     new CfnOutput(this,'MySimpleAppWebsiteUrl',{
       value: cloudFront.distributionDomainName,
-      exportName: 'MySimpleAppUrl',
+      exportName: `MySimpleAppUrl${props?.envName}`,
 
     });
 
