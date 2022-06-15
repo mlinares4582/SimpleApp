@@ -34,10 +34,7 @@ export class SimpleAppStack extends Stack {
       publicReadAccess: true,
     })
 
-    new BucketDeployment(this,'MySimpleWebsiteDeploy',{
-      sources: [Source.asset(path.join(__dirname, '..','frontend','build'))],
-      destinationBucket: websiteBucket
-    })
+  
 
     const cloudFront = new CloudFrontWebDistribution(this, 'MySimpleAppDistribution', {
       originConfigs: [{
@@ -48,6 +45,12 @@ export class SimpleAppStack extends Stack {
       
       
       }],
+    });
+
+    new BucketDeployment(this,'MySimpleWebsiteDeploy',{
+      sources: [Source.asset(path.join(__dirname, '..','frontend','build'))],
+      destinationBucket: websiteBucket,
+      distribution: cloudFront
     })
 
 
