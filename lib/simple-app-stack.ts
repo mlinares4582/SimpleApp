@@ -4,30 +4,35 @@ import { Construct } from 'constructs';
 import * as path from 'path';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
 import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
-// import { CorsHttpMethod, HttpApi,HttpMethod } from '@aws-cdk/aws-apigatewayv2-alpha';
-import { LambdaIntegration, LambdaRestApi } from 'aws-cdk-lib/aws-apigateway';
+import { LambdaRestApi } from 'aws-cdk-lib/aws-apigateway';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
-import { CloudFrontWebDistribution } from 'aws-cdk-lib/aws-cloudfront'; 
+import { CloudFrontWebDistribution, Distribution } from 'aws-cdk-lib/aws-cloudfront'; 
+import { ARecord, IPublicHostedZone, RecordTarget } from 'aws-cdk-lib/aws-route53';
+import { ICertificate } from 'aws-cdk-lib/aws-certificatemanager';
+import { S3Origin } from 'aws-cdk-lib/aws-cloudfront-origins';
+import { CloudFrontTarget } from 'aws-cdk-lib/aws-route53-targets';
 
 interface SimpleAppStackProps extends StackProps {
-  envName: string;
+  dnsName: string;
+  hostedZone: IPublicHostedZone
+  certificate: ICertificate;
 }
 
 export class SimpleAppStack extends Stack {
-  constructor(scope: Construct, id: string, props?: SimpleAppStackProps) {
+  constructor(scope: Construct, id: string, props: SimpleAppStackProps) {
     super(scope, id, props);
-
+    // const{ dnsName, hostedZone, certificate } =props;
     // The code that defines your stack goes here
     const bucket = new Bucket(this, 'MySimpleAppBucket', {
-    encryption: props?.envName === 'prod' ?BucketEncryption.S3_MANAGED : BucketEncryption.UNENCRYPTED,
-    });
-
-    new BucketDeployment(this,'MySimpleAppPhotos', {
-      sources: [
-        Source.asset(path.join(__dirname,'..', 'photos'))
-      ],
-      destinationBucket: bucket,
-    });
+      encryption: BucketEncryption.S3_MANAGED 
+      });
+  
+      new BucketDeployment(this,'MySimpleAppPhotos', {
+        sources: [
+          Source.asset(path.join(__dirname,'..', 'photos'))
+        ],
+        destinationBucket: bucket,
+      });
 
     // New bucket for the React App
     const websiteBucket = new Bucket(this, 'MySimpleAppWebsiteBucket',{
@@ -36,18 +41,18 @@ export class SimpleAppStack extends Stack {
       publicReadAccess: true,
     })
 
-  
-
-    const cloudFront = new CloudFrontWebDistribution(this, 'MySimpleAppDistribution', {
-      originConfigs: [{
-        s3OriginSource: {
-          s3BucketSource: websiteBucket,
-        },
-        behaviors:[{isDefaultBehavior: true}]
-      
-      
-      }],
+    const cloudFront = new Distribution(this,'MySimpleAppDistribution', {
+      defaultBehavior: {origin: new S3Origin(websiteBucket)},
+      domainNames: [props.dnsName],
+      certificate:props.certificate
     });
+
+
+      new ARecord( this, 'MySimpleAppARecordApex', {
+        zone: props.hostedZone,
+        target: RecordTarget.fromAlias(new CloudFrontTarget(cloudFront)),
+      });
+
 
     new BucketDeployment(this,'MySimpleWebsiteDeploy',{
       sources: [Source.asset(path.join(__dirname, '..','frontend','build'))],
@@ -100,25 +105,22 @@ export class SimpleAppStack extends Stack {
     const photoApi = apigw.root.addResource('getAllPhotos');
       photoApi.addMethod('GET');
 
-    
 
     new CfnOutput(this, 'MySimpleAppBucketNameExport', {
       value: bucket.bucketName,
-      exportName: `MySimpleAppBucketName${props?.envName}`,
+      exportName: `MySimpleAppBucketName`,
     });
 
     new CfnOutput(this,'MySimpleAppWebsiteBucketNameExport',{
       value: websiteBucket.bucketName,
-      exportName: `MySimpleAppWebsiteBucketName${props?.envName}`,
+      exportName: `MySimpleAppWebsiteBucketName`,
     });
 
     new CfnOutput(this,'MySimpleAppWebsiteUrl',{
       value: cloudFront.distributionDomainName,
-      exportName: `MySimpleAppUrl${props?.envName}`,
+      exportName: `MySimpleAppUrl`,
 
     });
-
-
   }
 }
 

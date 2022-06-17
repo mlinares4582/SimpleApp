@@ -2,14 +2,20 @@
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
 import { SimpleAppStack } from '../lib/simple-app-stack';
+import { SimpleAppStackDns } from '../lib/simple-app-stack-dns';
 
-
+const domainNameApex = 'mglinares.click';
 const app = new cdk.App();
-new SimpleAppStack(app, 'SimpleAppStack-dev', {
+
+const { hostedZone, certificate } = new SimpleAppStackDns(app, 'SimpleAppStackDns',{
   env: { region: 'us-east-1'},
-  envName: 'dev',
+  dnsName:domainNameApex,
 });
-new SimpleAppStack(app, 'SimpleAppStack-prod',{
-  env: { region: 'us-west-1'},
-  envName: 'prod'
-});
+
+
+new SimpleAppStack(app, 'SimpleAppStack',{
+  env: { region: 'us-east-1'},
+  dnsName: domainNameApex,
+  hostedZone,
+  certificate,
+});  
